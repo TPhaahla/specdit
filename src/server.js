@@ -1,6 +1,7 @@
 const express = require('express');
 const authController = require('./controllers/auth-controllers');
-const subredditController = require('../controllers/subreddit-controllers');
+const subredditController = require('./controllers/subreddit-controllers');
+const subscriptionController = require('./controllers/subscription-controllers');
 
 const { authenticateToken } = require('./middleware/auth-middleware');
 const app = express();
@@ -22,6 +23,9 @@ app.delete('/api/subreddits/:id', authenticateToken, subredditController.deleteS
 app.get('/api/subreddits/', subredditController.getAllSubreddits);
 app.get('/api/subreddits/:id', subredditController.getSubredditById);
 
+app.post('/api/subscriptions', authenticateToken, subscriptionController.subscribe);
+app.delete('/api/subscriptions/:subredditId', authenticateToken, subscriptionController.unsubscribe);
+app.get('/api/subscriptions', authenticateToken, subscriptionController.getUserSubscriptions);
 
 const PORT = process.env.PORT || 3000;
 
