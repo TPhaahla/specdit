@@ -17,6 +17,6 @@
     "prisma": "^5.22.0"
   },
   "prisma": {
-    "schema": "/db/prisma/schema.prisma"
+    "schema": "db/prisma/schema.prisma"
   }
 }
