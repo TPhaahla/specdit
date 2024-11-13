@@ -1,5 +1,8 @@
 const express = require('express');
 const authController = require('./controllers/auth-controllers');
+const subredditController = require('./controllers/subreddit-controllers');
+const subscriptionController = require('./controllers/subscription-controllers');
+
 const { authenticateToken } = require('./middleware/auth-middleware');
 const app = express();
 app.use(express.json());
@@ -13,6 +16,16 @@ app.post('/api/auth/login', authController.login);
 app.post('/api/auth/logout', authController.logout);
 app.post('/api/auth/register', authController.register);
 app.patch('/api/auth/change-password', authenticateToken, authController.changePassword);
+
+app.post('/api/subreddits/', authenticateToken, subredditController.createSubreddit);
+app.put('/api/subreddits/:id', authenticateToken, subredditController.editSubreddit);
+app.delete('/api/subreddits/:id', authenticateToken, subredditController.deleteSubreddit);
+app.get('/api/subreddits/', subredditController.getAllSubreddits);
+app.get('/api/subreddits/:id', subredditController.getSubredditById);
+
+app.post('/api/subscriptions', authenticateToken, subscriptionController.subscribe);
+app.delete('/api/subscriptions/:subredditId', authenticateToken, subscriptionController.unsubscribe);
+app.get('/api/subscriptions', authenticateToken, subscriptionController.getUserSubscriptions);
 
 const PORT = process.env.PORT || 3000;
 
