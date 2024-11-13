@@ -2,6 +2,8 @@ const express = require('express');
 const authController = require('./controllers/auth-controllers');
 const subredditController = require('./controllers/subreddit-controllers');
 const subscriptionController = require('./controllers/subscription-controllers');
+const postController = require('./controllers/post-controller');
+const voteController = require('./controllers/vote-controller');
 
 const { authenticateToken } = require('./middleware/auth-middleware');
 const app = express();
@@ -26,6 +28,17 @@ app.get('/api/subreddits/:id', subredditController.getSubredditById);
 app.post('/api/subscriptions', authenticateToken, subscriptionController.subscribe);
 app.delete('/api/subscriptions/:subredditId', authenticateToken, subscriptionController.unsubscribe);
 app.get('/api/subscriptions', authenticateToken, subscriptionController.getUserSubscriptions);
+
+app.post('/api/posts', authenticateToken, postController.createPost);
+app.put('/api/posts/:id', authenticateToken, postController.updatePost);
+app.delete('/api/posts/:id', authenticateToken, postController.deletePost);
+app.get('/api/posts/me', authenticateToken, postController.getCurrentUserPosts);
+app.get('/api/posts/user/:username', postController.getPostsByUsername);
+app.get('/api/posts/votes/me', authenticateToken, postController.getVotedPosts);
+
+app.post('/api/posts/:postId/vote', authenticateToken, voteController.votePost);
+app.get('/api/posts/:postId/votes', voteController.getPostVotes);
+
 
 const PORT = process.env.PORT || 3000;
 
