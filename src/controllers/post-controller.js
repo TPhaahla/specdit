@@ -231,4 +231,73 @@ exports.getPostsByUsername = async (req, res) => {
             message: 'Error fetching posts'
         });
     }
+};
+
+// Get all posts voted by the current user
+exports.getVotedPosts = async (req, res) => {
+    const userId = req.user.id;
+    const { voteType } = req.query; 
+
+    try {
+        const whereClause = {
+            userId,
+            ...(voteType && { type: voteType.toUpperCase() })
+        };
+
+        const votedPosts = await prisma.vote.findMany({
+            where: whereClause,
+            select: {
+                type: true,
+                post: {
+                    include: {
+                        author: {
+                            select: {
+                                username: true,
+                                name: true,
+                            }
+                        },
+                        subreddit: {
+                            select: {
+                                name: true,
+                            }
+                        },
+                        votes: true,
+                    }
+                }
+            },
+            orderBy: {
+                post: {
+                    createdAt: 'desc'
+                }
+            }
+        });
+
+        // Calculate vote counts for each post
+        const postsWithVoteCounts = votedPosts.map(vote => {
+            const post = vote.post;
+            const upvotes = post.votes.filter(v => v.type === 'UP').length;
+            const downvotes = post.votes.filter(v => v.type === 'DOWN').length;
+
+            return {
+                ...post,
+                userVoteType: vote.type,
+                votes: {
+                    upvotes,
+                    downvotes,
+                    score: upvotes - downvotes
+                }
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: postsWithVoteCounts
+        });
+    } catch (error) {
+        console.error('Get voted posts error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching voted posts'
+        });
+    }
 }; 
