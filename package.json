@@ -1,0 +1,22 @@
+{
+  "name": "specdit",
+  "version": "1.0.0",
+  "description": "A makeshift reddit api built with Node.js, Express.js, Prisma &amp; PostgreSQL",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --watch --trace-warnings --env-file=.env src/server.js"
+  },
+  "keywords": [],
+  "author": "Tshiamo",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.1",
+    "prisma": "^5.22.0"
+  },
+  "prisma": {
+    "schema": "/db/prisma/schema.prisma"
+  }
+}
