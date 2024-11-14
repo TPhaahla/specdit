@@ -1,5 +1,13 @@
 const prisma = require('../lib/prisma').prisma;
 
+// Add this helper function at the top of the file
+const getPaginationParams = (query) => {
+    const page = parseInt(query.page) || 1;
+    const limit = parseInt(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    return { skip, limit, page };
+};
+
 // Create a new post
 exports.createPost = async (req, res) => {
     const { title, content, subredditId } = req.body;
@@ -154,33 +162,65 @@ exports.deletePost = async (req, res) => {
 // Get all posts by current user
 exports.getCurrentUserPosts = async (req, res) => {
     const userId = req.user.id;
+    const { skip, limit, page } = getPaginationParams(req.query);
 
     try {
-        const posts = await prisma.post.findMany({
-            where: {
-                authorId: userId
-            },
-            include: {
-                author: {
-                    select: {
-                        username: true,
-                        name: true,
-                    }
+        const [posts, totalPosts] = await prisma.$transaction([
+            prisma.post.findMany({
+                where: {
+                    authorId: userId
                 },
-                subreddit: {
-                    select: {
-                        name: true,
-                    }
+                include: {
+                    author: {
+                        select: {
+                            username: true,
+                            name: true,
+                        }
+                    },
+                    subreddit: {
+                        select: {
+                            name: true,
+                        }
+                    },
+                    votes: true
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                skip,
+                take: limit
+            }),
+            prisma.post.count({
+                where: {
+                    authorId: userId
                 }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
+            })
+        ]);
+
+        // Calculate votes for each post
+        const postsWithVotes = posts.map(post => {
+            const upvotes = post.votes.filter(vote => vote.type === 'UP').length;
+            const downvotes = post.votes.filter(vote => vote.type === 'DOWN').length;
+            return {
+                ...post,
+                votes: {
+                    upvotes,
+                    downvotes,
+                    score: upvotes - downvotes
+                }
+            };
         });
 
         res.status(200).json({
             success: true,
-            data: posts
+            data: postsWithVotes,
+            pagination: {
+                page,
+                limit,
+                totalPosts,
+                totalPages: Math.ceil(totalPosts / limit),
+                hasMore: page * limit < totalPosts
+            }
         });
     } catch (error) {
         console.error('Get user posts error:', error);
@@ -194,35 +234,69 @@ exports.getCurrentUserPosts = async (req, res) => {
 // Get all posts by username
 exports.getPostsByUsername = async (req, res) => {
     const { username } = req.params;
+    const { skip, limit, page } = getPaginationParams(req.query);
 
     try {
-        const posts = await prisma.post.findMany({
-            where: {
-                author: {
-                    username: username
-                }
-            },
-            include: {
-                author: {
-                    select: {
-                        username: true,
-                        name: true,
+        const [posts, totalPosts] = await prisma.$transaction([
+            prisma.post.findMany({
+                where: {
+                    author: {
+                        username: username
                     }
                 },
-                subreddit: {
-                    select: {
-                        name: true,
+                include: {
+                    author: {
+                        select: {
+                            username: true,
+                            name: true,
+                        }
+                    },
+                    subreddit: {
+                        select: {
+                            name: true,
+                        }
+                    },
+                    votes: true
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                skip,
+                take: limit
+            }),
+            prisma.post.count({
+                where: {
+                    author: {
+                        username: username
                     }
                 }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
+            })
+        ]);
+
+        // Calculate votes for each post
+        const postsWithVotes = posts.map(post => {
+            const upvotes = post.votes.filter(vote => vote.type === 'UP').length;
+            const downvotes = post.votes.filter(vote => vote.type === 'DOWN').length;
+            return {
+                ...post,
+                votes: {
+                    upvotes,
+                    downvotes,
+                    score: upvotes - downvotes
+                }
+            };
         });
 
         res.status(200).json({
             success: true,
-            data: posts
+            data: postsWithVotes,
+            pagination: {
+                page,
+                limit,
+                totalPosts,
+                totalPages: Math.ceil(totalPosts / limit),
+                hasMore: page * limit < totalPosts
+            }
         });
     } catch (error) {
         console.error('Get posts by username error:', error);
