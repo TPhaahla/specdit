@@ -4,6 +4,7 @@ const subredditController = require('./controllers/subreddit-controllers');
 const subscriptionController = require('./controllers/subscription-controllers');
 const postController = require('./controllers/post-controller');
 const voteController = require('./controllers/vote-controller');
+const commentController = require('./controllers/comment-controller');
 
 const { authenticateToken } = require('./middleware/auth-middleware');
 const app = express();
@@ -39,6 +40,9 @@ app.get('/api/posts/votes/me', authenticateToken, postController.getVotedPosts);
 app.post('/api/posts/:postId/vote', authenticateToken, voteController.votePost);
 app.get('/api/posts/:postId/votes', voteController.getPostVotes);
 
+app.post('/api/posts/:postId/comments', authenticateToken, commentController.createComment);
+app.delete('/api/comments/:id', authenticateToken, commentController.deleteComment);
+app.get('/api/posts/:postId/comments', commentController.getPostComments);
 
 const PORT = process.env.PORT || 3000;
 
