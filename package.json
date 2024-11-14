@@ -2,10 +2,17 @@
   "name": "specdit",
   "version": "1.0.0",
   "description": "A makeshift reddit api built with Node.js, Express.js, Prisma &amp; PostgreSQL",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch --trace-warnings --env-file=.env src/server.js"
+    "dev": "node --watch --trace-warnings --env-file=.env src/server.js",
+    "start": "node src/server.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix"
   },
   "keywords": [],
   "author": "Tshiamo",
@@ -16,6 +23,9 @@
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^5.22.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "prisma": {
     "schema": "db/prisma/schema.prisma"
