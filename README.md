@@ -7,14 +7,14 @@ A makeshift reddit api built with Node.js, Express.js, Prisma &amp; PostgreSQL
 ## Game Plan
 
 - [x] Basic Setup
-- [ ] DB Schema
+- [x] DB Schema
 - [ ] Deploy
-- [ ] Auth
-- [ ] Creating & Joining Subreddits
-- [ ] Posts CRUD
-- [ ] Posts Voting
-- [ ] Comments CRUD
-- [ ] Comments Voting
+- [x] Auth
+- [x] Creating & Joining Subreddits
+- [x] Posts CRUD
+- [x] Posts Voting
+- [x] Comments CRUD
+- [x] Comments Voting
 - [ ] Post Queries
 - [ ] Rate Limiting
 - [ ] Documentation
