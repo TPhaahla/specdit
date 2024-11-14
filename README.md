@@ -2,13 +2,11 @@
 
 A Reddit-style API built with Node.js, Express.js, Prisma & PostgreSQL that provides core Reddit functionalities including subreddits, posts, comments, and voting.
 
-## TODO
+## Resources
+- [Specdit Postman Collection](https://www.postman.com/tshiamo-phaahla/specdit-api/overview)
 
-- [ ] Pagination
-- [ ] Search
+## TODO
 - [ ] Rate limiting
-- [ ] Email verification
-- [ ] Link Postman Collection
 
 ## Features
 
@@ -78,6 +76,7 @@ npm start
 ```
 
 ## API Endpoints
+[Specdit - Postman Collection](https://www.postman.com/tshiamo-phaahla/specdit-api/request/8d4wk7h/register)
 
 ### Authentication
 
