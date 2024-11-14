@@ -4,8 +4,7 @@ const subredditController = require('./controllers/subreddit-controllers');
 const subscriptionController = require('./controllers/subscription-controllers');
 const postController = require('./controllers/post-controller');
 const voteController = require('./controllers/vote-controller');
-const commentController = require('./controllers/comment-controller');
-const commentVoteController = require('./controllers/comment-vote-controller');
+const commentController = require('./controllers/comment-controllers');
 
 const { authenticateToken } = require('./middleware/auth-middleware');
 const app = express();
