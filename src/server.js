@@ -5,6 +5,7 @@ const subscriptionController = require('./controllers/subscription-controllers')
 const postController = require('./controllers/post-controller');
 const voteController = require('./controllers/vote-controller');
 const commentController = require('./controllers/comment-controller');
+const commentVoteController = require('./controllers/comment-vote-controller');
 
 const { authenticateToken } = require('./middleware/auth-middleware');
 const app = express();
@@ -43,6 +44,9 @@ app.get('/api/posts/:postId/votes', voteController.getPostVotes);
 app.post('/api/posts/:postId/comments', authenticateToken, commentController.createComment);
 app.delete('/api/comments/:id', authenticateToken, commentController.deleteComment);
 app.get('/api/posts/:postId/comments', commentController.getPostComments);
+
+app.post('/api/comments/:commentId/vote', authenticateToken, voteController.voteComment);
+app.get('/api/comments/votes/me', authenticateToken, voteController.getVotedComments);
 
 const PORT = process.env.PORT || 3000;
 

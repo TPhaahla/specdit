@@ -145,3 +145,183 @@ exports.getPostVotes = async (req, res) => {
         });
     }
 }; 
+
+// Vote on a comment
+exports.voteComment = async (req, res) => {
+    const { commentId } = req.params;
+    const { voteType } = req.body;
+    const userId = req.user.id;
+
+    if (!['UP', 'DOWN'].includes(voteType)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid vote type. Must be UP or DOWN'
+        });
+    }
+
+    try {
+        // Check if comment exists
+        const comment = await prisma.comment.findUnique({
+            where: { id: commentId }
+        });
+
+        if (!comment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Comment not found'
+            });
+        }
+
+        // Check if user has already voted
+        const existingVote = await prisma.commentVote.findUnique({
+            where: {
+                userId_commentId: {
+                    userId,
+                    commentId
+                }
+            }
+        });
+
+        if (existingVote) {
+            if (existingVote.type === voteType) {
+                // Remove vote if clicking the same type again
+                await prisma.commentVote.delete({
+                    where: {
+                        userId_commentId: {
+                            userId,
+                            commentId
+                        }
+                    }
+                });
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Vote removed successfully'
+                });
+            } else {
+                // Update vote if changing vote type
+                await prisma.commentVote.update({
+                    where: {
+                        userId_commentId: {
+                            userId,
+                            commentId
+                        }
+                    },
+                    data: {
+                        type: voteType
+                    }
+                });
+            }
+        } else {
+            // Create new vote
+            await prisma.commentVote.create({
+                data: {
+                    type: voteType,
+                    userId,
+                    commentId
+                }
+            });
+        }
+
+        // Get updated vote counts
+        const upvotes = await prisma.commentVote.count({
+            where: {
+                commentId,
+                type: 'UP'
+            }
+        });
+
+        const downvotes = await prisma.commentVote.count({
+            where: {
+                commentId,
+                type: 'DOWN'
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Vote recorded successfully',
+            data: {
+                upvotes,
+                downvotes,
+                score: upvotes - downvotes
+            }
+        });
+    } catch (error) {
+        console.error('Comment vote error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing vote'
+        });
+    }
+};
+
+// Get user's voted comments
+exports.getVotedComments = async (req, res) => {
+    const userId = req.user.id;
+    const { voteType } = req.query;
+
+    try {
+        const whereClause = {
+            userId,
+            ...(voteType && { type: voteType.toUpperCase() })
+        };
+
+        const votedComments = await prisma.commentVote.findMany({
+            where: whereClause,
+            select: {
+                type: true,
+                comment: {
+                    include: {
+                        author: {
+                            select: {
+                                username: true,
+                                name: true
+                            }
+                        },
+                        post: {
+                            select: {
+                                id: true,
+                                title: true
+                            }
+                        },
+                        votes: true
+                    }
+                }
+            },
+            orderBy: {
+                comment: {
+                    createdAt: 'desc'
+                }
+            }
+        });
+
+        // Calculate vote counts for each comment
+        const commentsWithVoteCounts = votedComments.map(vote => {
+            const comment = vote.comment;
+            const upvotes = comment.votes.filter(v => v.type === 'UP').length;
+            const downvotes = comment.votes.filter(v => v.type === 'DOWN').length;
+
+            return {
+                ...comment,
+                userVoteType: vote.type,
+                votes: {
+                    upvotes,
+                    downvotes,
+                    score: upvotes - downvotes
+                }
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: commentsWithVoteCounts
+        });
+    } catch (error) {
+        console.error('Get voted comments error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching voted comments'
+        });
+    }
+}; 
