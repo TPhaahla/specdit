@@ -142,6 +142,17 @@ The API returns consistent error responses:
 }
 ```
 
+## Rate Limiting
+
+The API implements the following rate limits per IP address:
+
+- General endpoints: 100 requests per 15 minutes
+- Authentication endpoints: 5 requests per hour
+- Voting endpoints: 10 votes per minute
+- Content creation: 30 posts/comments per hour
+
+When rate limits are exceeded, the API will return a 429 status code with an error message.
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
