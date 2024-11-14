@@ -341,9 +341,6 @@ exports.getPostById = async (req, res) => {
                                 votes: true
                             }
                         }
-                    },
-                    orderBy: {
-                        createdAt: 'desc'
                     }
                 },
                 votes: true
@@ -361,36 +358,45 @@ exports.getPostById = async (req, res) => {
         const upvotes = post.votes.filter(vote => vote.type === 'UP').length;
         const downvotes = post.votes.filter(vote => vote.type === 'DOWN').length;
 
-        // Calculate vote counts for each comment
-        const commentsWithVotes = post.comments.map(comment => {
+        // Calculate vote counts for each comment and store in array for sorting
+        const commentsWithScores = post.comments.map(comment => {
             const commentUpvotes = comment.votes.filter(vote => vote.type === 'UP').length;
             const commentDownvotes = comment.votes.filter(vote => vote.type === 'DOWN').length;
+            const score = commentUpvotes - commentDownvotes;
 
             // Calculate votes for replies
             const repliesWithVotes = comment.replies.map(reply => {
                 const replyUpvotes = reply.votes.filter(vote => vote.type === 'UP').length;
                 const replyDownvotes = reply.votes.filter(vote => vote.type === 'DOWN').length;
+                const replyScore = replyUpvotes - replyDownvotes;
 
                 return {
                     ...reply,
                     votes: {
                         upvotes: replyUpvotes,
                         downvotes: replyDownvotes,
-                        score: replyUpvotes - replyDownvotes
+                        score: replyScore
                     }
                 };
             });
 
+            // Sort replies by score
+            repliesWithVotes.sort((a, b) => b.votes.score - a.votes.score);
+
             return {
                 ...comment,
+                score,
                 votes: {
                     upvotes: commentUpvotes,
                     downvotes: commentDownvotes,
-                    score: commentUpvotes - commentDownvotes
+                    score
                 },
                 replies: repliesWithVotes
             };
         });
+
+        // Sort comments by score
+        commentsWithScores.sort((a, b) => b.score - a.score);
 
         // Format the response
         const formattedPost = {
@@ -400,7 +406,7 @@ exports.getPostById = async (req, res) => {
                 downvotes,
                 score: upvotes - downvotes
             },
-            comments: commentsWithVotes
+            comments: commentsWithScores
         };
 
         res.status(200).json({

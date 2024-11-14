@@ -151,15 +151,52 @@ exports.getPostComments = async (req, res) => {
                         votes: true
                     }
                 }
-            },
-            orderBy: {
-                createdAt: 'desc'
             }
         });
 
+        // Calculate scores and sort comments
+        const commentsWithScores = comments.map(comment => {
+            const upvotes = comment.votes.filter(vote => vote.type === 'UP').length;
+            const downvotes = comment.votes.filter(vote => vote.type === 'DOWN').length;
+            const score = upvotes - downvotes;
+
+            // Calculate and sort replies
+            const repliesWithScores = comment.replies.map(reply => {
+                const replyUpvotes = reply.votes.filter(vote => vote.type === 'UP').length;
+                const replyDownvotes = reply.votes.filter(vote => vote.type === 'DOWN').length;
+                const replyScore = replyUpvotes - replyDownvotes;
+
+                return {
+                    ...reply,
+                    votes: {
+                        upvotes: replyUpvotes,
+                        downvotes: replyDownvotes,
+                        score: replyScore
+                    }
+                };
+            });
+
+            // Sort replies by score
+            repliesWithScores.sort((a, b) => b.votes.score - a.votes.score);
+
+            return {
+                ...comment,
+                score,
+                votes: {
+                    upvotes,
+                    downvotes,
+                    score
+                },
+                replies: repliesWithScores
+            };
+        });
+
+        // Sort comments by score
+        commentsWithScores.sort((a, b) => b.score - a.score);
+
         res.status(200).json({
             success: true,
-            data: comments
+            data: commentsWithScores
         });
     } catch (error) {
         console.error('Get comments error:', error);
