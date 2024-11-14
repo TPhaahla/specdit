@@ -37,6 +37,7 @@ app.delete('/api/posts/:id', authenticateToken, postController.deletePost);
 app.get('/api/posts/me', authenticateToken, postController.getCurrentUserPosts);
 app.get('/api/posts/user/:username', postController.getPostsByUsername);
 app.get('/api/posts/votes/me', authenticateToken, postController.getVotedPosts);
+app.get('/api/posts/:id', postController.getPostById);
 
 app.post('/api/posts/:postId/vote', authenticateToken, voteController.votePost);
 app.get('/api/posts/:postId/votes', voteController.getPostVotes);

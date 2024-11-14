@@ -300,4 +300,118 @@ exports.getVotedPosts = async (req, res) => {
             message: 'Error fetching voted posts'
         });
     }
+};
+
+// Get a single post by ID with comments and votes
+exports.getPostById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const post = await prisma.post.findUnique({
+            where: { id },
+            include: {
+                author: {
+                    select: {
+                        username: true,
+                        name: true,
+                    }
+                },
+                subreddit: {
+                    select: {
+                        name: true,
+                    }
+                },
+                comments: {
+                    include: {
+                        author: {
+                            select: {
+                                username: true,
+                                name: true
+                            }
+                        },
+                        votes: true,
+                        replies: {
+                            include: {
+                                author: {
+                                    select: {
+                                        username: true,
+                                        name: true
+                                    }
+                                },
+                                votes: true
+                            }
+                        }
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                },
+                votes: true
+            }
+        });
+
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: 'Post not found'
+            });
+        }
+
+        // Calculate vote counts
+        const upvotes = post.votes.filter(vote => vote.type === 'UP').length;
+        const downvotes = post.votes.filter(vote => vote.type === 'DOWN').length;
+
+        // Calculate vote counts for each comment
+        const commentsWithVotes = post.comments.map(comment => {
+            const commentUpvotes = comment.votes.filter(vote => vote.type === 'UP').length;
+            const commentDownvotes = comment.votes.filter(vote => vote.type === 'DOWN').length;
+
+            // Calculate votes for replies
+            const repliesWithVotes = comment.replies.map(reply => {
+                const replyUpvotes = reply.votes.filter(vote => vote.type === 'UP').length;
+                const replyDownvotes = reply.votes.filter(vote => vote.type === 'DOWN').length;
+
+                return {
+                    ...reply,
+                    votes: {
+                        upvotes: replyUpvotes,
+                        downvotes: replyDownvotes,
+                        score: replyUpvotes - replyDownvotes
+                    }
+                };
+            });
+
+            return {
+                ...comment,
+                votes: {
+                    upvotes: commentUpvotes,
+                    downvotes: commentDownvotes,
+                    score: commentUpvotes - commentDownvotes
+                },
+                replies: repliesWithVotes
+            };
+        });
+
+        // Format the response
+        const formattedPost = {
+            ...post,
+            votes: {
+                upvotes,
+                downvotes,
+                score: upvotes - downvotes
+            },
+            comments: commentsWithVotes
+        };
+
+        res.status(200).json({
+            success: true,
+            data: formattedPost
+        });
+    } catch (error) {
+        console.error('Get post error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching post'
+        });
+    }
 }; 
