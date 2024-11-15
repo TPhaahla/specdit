@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma').prisma;
+const { transformIds } = require('../lib/hash-ids');
 
 // Subscribe to a subreddit
 exports.subscribe = async (req, res) => {
@@ -46,7 +47,7 @@ exports.subscribe = async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Successfully subscribed to subreddit',
-            data: subscription
+            data: transformIds(subscription)
         });
     } catch (error) {
         console.error('Subscription error:', error);
@@ -117,7 +118,7 @@ exports.getUserSubscriptions = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: subscriptions
+            data: transformIds(subscriptions)
         });
     } catch (error) {
         console.error('Get subscriptions error:', error);

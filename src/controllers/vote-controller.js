@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma').prisma;
+const { transformIds } = require('../lib/hash-ids');
 
 // Vote on a post (upvote or downvote)
 exports.votePost = async (req, res) => {
@@ -68,12 +69,17 @@ exports.votePost = async (req, res) => {
             }
         } else {
             // Create new vote
-            await prisma.vote.create({
+            const vote = await prisma.vote.create({
                 data: {
                     type: voteType,
                     userId,
                     postId
                 }
+            });
+
+            res.status(200).json({
+                success: true,
+                data: transformIds(vote)
             });
         }
 
@@ -115,27 +121,16 @@ exports.getPostVotes = async (req, res) => {
     const { postId } = req.params;
 
     try {
-        const upvotes = await prisma.vote.count({
+        const votes = await prisma.vote.findMany({
             where: {
                 postId,
                 type: 'UP'
             }
         });
 
-        const downvotes = await prisma.vote.count({
-            where: {
-                postId,
-                type: 'DOWN'
-            }
-        });
-
         res.status(200).json({
             success: true,
-            data: {
-                upvotes,
-                downvotes,
-                score: upvotes - downvotes
-            }
+            data: transformIds(votes)
         });
     } catch (error) {
         console.error('Get votes error:', error);

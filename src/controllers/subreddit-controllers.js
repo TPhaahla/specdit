@@ -1,3 +1,4 @@
+const { transformIds } = require('../lib/hash-ids');
 const prisma = require('../lib/prisma').prisma;
 
 // Create a new subreddit
@@ -55,9 +56,15 @@ exports.deleteSubreddit = async (req, res) => {
 exports.getAllSubreddits = async (req, res) => {
     try {
         const subreddits = await prisma.subreddit.findMany();
-        res.status(200).json(subreddits);
+        res.status(200).json({
+            success: true,
+            data: transformIds(subreddits)
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching subreddits' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Error fetching subreddits' 
+        });
     }
 };
 
@@ -68,13 +75,33 @@ exports.getSubredditById = async (req, res) => {
     try {
         const subreddit = await prisma.subreddit.findUnique({
             where: { id },
+            include: {
+                Creator: {
+                    select: {
+                        username: true,
+                        name: true
+                    }
+                },
+                subscribers: true
+            }
         });
+
         if (!subreddit) {
-            return res.status(404).json({ error: 'Subreddit not found' });
+            return res.status(404).json({ 
+                success: false,
+                error: 'Subreddit not found' 
+            });
         }
-        res.status(200).json(subreddit);
+
+        res.status(200).json({
+            success: true,
+            data: transformIds(subreddit)
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching subreddit' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Error fetching subreddit' 
+        });
     }
 };
 

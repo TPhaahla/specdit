@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma').prisma;
+const { transformIds } = require('../lib/hash-ids');
 
 // Add this helper function at the top of the file
 const getPaginationParams = (query) => {
@@ -45,7 +46,7 @@ exports.createPost = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            data: post
+            data: transformIds(post)
         });
     } catch (error) {
         console.error('Create post error:', error);
@@ -106,7 +107,7 @@ exports.updatePost = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: post
+            data: transformIds(post)
         });
     } catch (error) {
         console.error('Update post error:', error);
@@ -485,7 +486,7 @@ exports.getPostById = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: formattedPost
+            data: transformIds(formattedPost)
         });
     } catch (error) {
         console.error('Get post error:', error);

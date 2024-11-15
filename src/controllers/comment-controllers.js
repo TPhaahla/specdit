@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma').prisma;
+const { transformIds } = require('../lib/hash-ids');
 
 // Create a comment
 exports.createComment = async (req, res) => {
@@ -70,7 +71,7 @@ exports.createComment = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            data: comment
+            data: transformIds(comment)
         });
     } catch (error) {
         console.error('Create comment error:', error);

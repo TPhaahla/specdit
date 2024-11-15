@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const utils = require('../lib/utils')
 const prisma = require('../lib/prisma').prisma
 const { randomUUID } = require('crypto');
+const { transformIds } = require('../lib/hash-ids');
 
 
 
@@ -49,11 +50,16 @@ exports.register = async (req, res) => {
         });
 
         const token = utils.generateToken(user);
-        res.status(201).cookie('Authorization', 'Bearer ' + token, {
-            expires: new Date(Date.now() + 8 * 3600000),
-            httpOnly: true,
-            secure: true,
-        }).json({ user, token });
+        res.status(201)
+           .cookie('Authorization', 'Bearer ' + token, {
+                expires: new Date(Date.now() + 8 * 3600000),
+                httpOnly: true,
+                secure: true,
+            })
+           .json({ 
+                user: transformIds(user), 
+                token 
+            });
 
     }
     catch (error) {
