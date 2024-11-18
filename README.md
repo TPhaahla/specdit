@@ -7,7 +7,7 @@ A Reddit-style API built with Node.js, Express.js, Prisma & PostgreSQL that prov
 
 ## TODO
 - [ ] Rate limiting
-
+- [ ] Automate Deployments on Push (GitHub Workflow)
 ## Features
 
 - 🔐 Authentication (Register, Login, Password Change)
